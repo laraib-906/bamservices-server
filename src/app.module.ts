@@ -6,25 +6,19 @@ import { JwtModule } from '@nestjs/jwt';
 import { RouterModule } from 'nest-router';
 import { routes } from './server/common/router';
 import { User } from './server/models';
-import { CustomerModule } from './server/api/customer/customer.module';
-import { PaymentModule } from './server/api/payment/payment.module';
+import { FilesModule } from './server/api/files/files.module';
 
 @Module({
   imports: [
     MongooseModule.forRoot(process.env.MONGODB_URI),
-    MongooseModule.forFeature([
-      {
-        name: 'User',
-        schema: User
-      }
-    ]),
     RouterModule.forRoutes(routes),
     AuthModule, 
     UserModule,
     JwtModule.register({ secret: process.env.JWT_SECRET }),
-    CustomerModule,
-    PaymentModule
+    FilesModule
   ],
+  providers: [],
+  controllers: [],
   
 })
 export class AppModule {}

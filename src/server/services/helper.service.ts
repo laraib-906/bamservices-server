@@ -4,7 +4,7 @@ import { IUser } from "../types/user";
 /*
  *	Helper methods will be here
 */
-export class HelperService {
+class HelperService {
 
     tranformMeData(user: IUser) {
         return {
@@ -17,8 +17,8 @@ export class HelperService {
             city: user['city'],
             country: user['country'],
             postalCode: user['postalCode'],
-	        profilePicture: user['profilePicture'],
-	        role: user['role'],
+            profilePicture: user['profilePicture'],
+            role: user['role'],
         } as IMeUser;
     }
 
