@@ -11,6 +11,12 @@ import { FilesModule } from './server/api/files/files.module';
 @Module({
   imports: [
     MongooseModule.forRoot(process.env.MONGODB_URI),
+    MongooseModule.forFeature([
+      {
+        name: 'User',
+        schema: User
+      }
+    ]),
     RouterModule.forRoutes(routes),
     AuthModule, 
     UserModule,

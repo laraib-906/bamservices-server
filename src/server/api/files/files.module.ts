@@ -8,7 +8,7 @@ import { FilesSchema } from './files.schema';
   imports: [
     MongooseModule.forFeature([
       {
-        name: 'files',
+        name: 'Files',
         schema: FilesSchema
       }
     ])
