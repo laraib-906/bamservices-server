@@ -53,7 +53,7 @@ export class FilesController extends BaseController {
                 folder = await this.fileService.createFolder(process.env.GOOGLE_DRIVE_FOLDER_NAME);
             }
             let response = await this.fileService.uploadFile(file, folder.id);
-            super.response(res, response, 200, "");
+            super.response(res, response, 200, "Successfully Uploaded File");
         }
         catch (error) {
             logger.error(error);
