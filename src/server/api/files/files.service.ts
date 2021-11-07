@@ -24,10 +24,10 @@ export class FilesService {
     public async listFiles(
         page?: number,
         limit?: number
-    ) : Promise<PaginateResult<IFiles>> {
+    ): Promise<PaginateResult<IFiles>> {
         return await this.fileSchema.paginate({}, { page, limit });
     }
-    
+
     public async createFolder(folderName: string): Promise<any> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -59,18 +59,18 @@ export class FilesService {
                 if (!folderName) {
                     return reject({ message: "Invaild Folder name", code: 400 });
                 }
-                
+
                 await this.driveClient.files.list(
                     {
                         q: `mimeType='application/vnd.google-apps.folder' and name='${folderName}'`,
                         fields: 'files(id, name)',
                     },
-                    (err, res: {data: any}) => {
+                    (err, res: { data: any }) => {
                         if (err) {
                             return reject(err);
-                          }
-                
-                          return resolve(res.data.files ? res.data.files[0] : null);
+                        }
+
+                        return resolve(res.data.files ? res.data.files[0] : null);
                     }
                 );
             } catch (error) {
@@ -95,7 +95,7 @@ export class FilesService {
                     },
                 });
 
-                if(!uploaded) {
+                if (!uploaded) {
                     return reject({ message: "Error uploading file", code: 400 });
                 }
 
@@ -103,7 +103,7 @@ export class FilesService {
                     ...uploaded.data
                 });
 
-                rimraf('uploads/*', function () { });                
+                rimraf('uploads/*', function () { });
                 resolve(newFile.save());
 
             } catch (error) {
@@ -119,12 +119,12 @@ export class FilesService {
     public async deleteFile(id: string): Promise<IMongooseDeleteObject> {
         return new Promise(async (resolve, reject) => {
             try {
-                
+
                 const deleteFile = await this.driveClient.files.delete({
                     fileId: id
                 });
 
-                if(!deleteFile) {
+                if (!deleteFile) {
                     return reject({ message: "Error Deleting file", code: 400 });
                 }
 
@@ -132,6 +132,36 @@ export class FilesService {
 
                 resolve(deleteIntentRes);
 
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    public async downloadFile(payload: any) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const dest = fs.createWriteStream(payload.name);
+                const file = await this.driveClient.files.get(
+                    { fileId: payload.id, alt: "media" },
+                    { responseType: "stream" },
+                    (err, { data }) => {
+                        if (err) {
+                            reject(err);
+                        }
+                        data
+                            .on("end", (d) => {
+                                console.log(d);
+                                resolve({});
+                            })
+                            .on("error", (err) => {
+                                reject(err);
+                            })
+                            .pipe(dest);
+                    }
+                );
+
+                resolve(file);
             } catch (error) {
                 reject(error);
             }

@@ -64,6 +64,21 @@ export class FilesController extends BaseController {
         }
     }
 
+    @Post('/download')
+    async downloadFile(@Req() req: Request, @Res() res: Response) {
+        try {
+            const response = await this.fileService.downloadFile(req.body);
+            super.response(res, response, 200, "File Downloaded Successfully");
+        }
+        catch (error) {
+            logger.error(error);
+            const err = manageError(error);
+            l.error(`Error in login, err code: ${400}`);
+            l.error(err.message);
+            super.response(res, '', err.code, err.message);
+        }
+    }
+
     @Get(':id')
     async getFileByID(@Param() param, @Req() req: Request, @Res() res: Response) {
         console.log(param);
