@@ -32,6 +32,14 @@ const UserSchema = new Schema<IUserModel<IUser>>({
 			}
 		}
 	},
+	images: {
+		key: {
+			type: Types.String
+		},
+		url: {
+			type: Types.String
+		}
+	},
 	company: { type: Types.String, requied: true },
 	suite: { type: Types.String, requied: true },
 	provider: String,

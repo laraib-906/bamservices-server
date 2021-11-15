@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 import l, { logger } from 'src/server/common/logger';
-import { HelperService } from 'src/server/services/helper.service';
+import HelperService from 'src/server/services/helper.service';
 import { manageError } from 'src/server/services/response.service';
 import { BaseController } from '../../common/_base.controller';
 import { AuthService } from './auth.service';
@@ -32,8 +32,7 @@ export class AuthController extends BaseController {
     @Get("/me")
     async getLoggedInUser(@Req() req: Request, @Res() res: Response): Promise<void> {
         try {
-            const helperService = new HelperService();
-            super.response(res, helperService.tranformMeData(req.user), 200, "Successfully fetched user info");
+            super.response(res, HelperService.tranformMeData(req.user), 200, "Successfully fetched user info");
         }
         catch (error) {
             logger.error(error);
