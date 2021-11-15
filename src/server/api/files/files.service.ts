@@ -138,30 +138,25 @@ export class FilesService {
         });
     }
 
-    public async downloadFile(payload: any) {
+    public async downloadFile(payload: any): Promise<Buffer> {
         return new Promise(async (resolve, reject) => {
             try {
-                const dest = fs.createWriteStream(payload.name);
                 const file = await this.driveClient.files.get(
-                    { fileId: payload.id, alt: "media" },
-                    { responseType: "stream" },
+                    {fileId: payload.id, alt: "media",},
+                    {responseType: "stream"},
                     (err, { data }) => {
-                        if (err) {
-                            reject(err);
-                        }
-                        data
-                            .on("end", (d) => {
-                                console.log(d);
-                                resolve({});
-                            })
-                            .on("error", (err) => {
-                                reject(err);
-                            })
-                            .pipe(dest);
+                      if (err) {
+                        console.log(err);
+                        return;
+                      }
+                      let buf = [];
+                      data.on("data", (e) => buf.push(e));
+                      data.on("end", () => {
+                        const buffer = Buffer.concat(buf);
+                        resolve(buffer);
+                      });
                     }
-                );
-
-                resolve(file);
+                  );
             } catch (error) {
                 reject(error);
             }
