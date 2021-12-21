@@ -16,7 +16,6 @@ export class AuthController extends BaseController {
         try {
             const response = await this.authService.login(req.body);
             res.cookie('token', response.accessToken);
-            console.log('tookeen',response.accessToken)
             super.response(res, response, 200, "");
         }
         catch (error) {
