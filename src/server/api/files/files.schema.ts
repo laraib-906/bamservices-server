@@ -13,13 +13,13 @@ export class Files {
         type: Types.String,
         required: true
     })
-    kind: string;
+    fileId: string;
 
     @Prop({
         type: Types.String,
         required: true
     })
-    id: string;
+    metaDataId: string;
 
     @Prop({
         type: Types.String,
@@ -31,7 +31,27 @@ export class Files {
         type: Types.String,
         required: true
     })
-    mimeType: string;
+    filename: string;
+
+    @Prop({
+        type: Types.String,
+        required: true
+    })
+    bucket: string;
+
+
+    @Prop({
+        type: Types.String,
+        required: true
+    })
+    timeCreated: string;
+
+
+    @Prop({
+        type: Types.String,
+        required: true
+    })
+    downloadLink: string;
 }
 
 const FilesSchemaClass = SchemaFactory.createForClass(Files);

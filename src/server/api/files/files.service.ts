@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { drive_v3 } from 'googleapis';
 import { IFiles, IFilesModel } from 'src/server/types/files';
 import { PaginateResult } from 'mongoose-paginate-v2';
 import { IMongooseDeleteObject } from '../../types/response';
-import { googleOAuthService } from 'src/server/services/oauth.service';
+import { firebaseService } from 'src/server/services/firebase.service';
 
 const fs = require('fs');
 const rimraf = require('rimraf');
@@ -12,12 +11,10 @@ const rimraf = require('rimraf');
 @Injectable()
 export class FilesService {
 
-    private driveClient: drive_v3.Drive;
-    
+    private driveClient;
 
-    constructor(@InjectModel('Files') private readonly fileSchema: IFilesModel<IFiles>) {
-        this.driveClient = googleOAuthService.getDriveClient();
-    }
+
+    constructor(@InjectModel('Files') private readonly fileSchema: IFilesModel<IFiles>) { }
 
     public async listFiles(
         page?: number,
@@ -26,79 +23,29 @@ export class FilesService {
         return await this.fileSchema.paginate({}, { page, limit });
     }
 
-    public async createFolder(folderName: string): Promise<any> {
+    public async uploadFile(file: Express.Multer.File): Promise<IFiles> {
         return new Promise(async (resolve, reject) => {
             try {
+                const response = await firebaseService.uploadFile(file);
 
-                if (!folderName) {
-                    reject({ message: "Invaild Folder name", code: 400 });
-                }
-
-                const response = await this.driveClient.files.create({
-                    resource: {
-                        name: folderName,
-                        mimeType: 'application/vnd.google-apps.folder',
-                    },
-                    fields: 'id, name',
-                } as any);
-
-                resolve(response);
-
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
-
-    public async searchFolder(folderName: string): Promise<any> {
-        return new Promise(async (resolve, reject) => {
-            try {
-
-                if (!folderName) {
-                    return reject({ message: "Invaild Folder name", code: 400 });
-                }
-
-                await this.driveClient.files.list(
-                    {
-                        q: `mimeType='application/vnd.google-apps.folder' and name='${folderName}'`,
-                        fields: 'files(id, name)',
-                    },
-                    (err, res: { data: any }) => {
-                        if (err) {
-                            return reject(err);
-                        }
-
-                        return resolve(res.data.files ? res.data.files[0] : null);
-                    }
-                );
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
-
-
-    public async uploadFile(file: Express.Multer.File, folderId?: string): Promise<IFiles> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const uploaded = await this.driveClient.files.create({
-                    requestBody: {
-                        name: file.originalname,
-                        mimeType: file.mimetype,
-                        parents: folderId ? [folderId] : [],
-                    },
-                    media: {
-                        mimeType: file.mimetype,
-                        body: fs.createReadStream(`${file.path}`),
-                    },
-                });
-
-                if (!uploaded) {
+                if (!response) {
                     return reject({ message: "Error uploading file", code: 400 });
                 }
 
+                const fileResponse = response[0];
+                const responseDetails = {
+                    fileId: fileResponse.id,
+                    metaDataId: fileResponse.metadata.id,
+                    name: file.originalname,
+                    filename: fileResponse.name,
+                    bucket: fileResponse.metadata.bucket,
+                    timeCreated: fileResponse.metadata.mediaLink,
+                    downloadLink: fileResponse.metadata.mediaLink,
+                }
+
+
                 const newFile = new this.fileSchema({
-                    ...uploaded.data
+                    ...responseDetails
                 });
 
                 rimraf('uploads/*', function () { });
@@ -111,50 +58,24 @@ export class FilesService {
     }
 
     public async getFileById(id: string): Promise<IFiles> {
-        return await this.fileSchema.findOne({ id });
+        return await this.fileSchema.findOne({ _id: id });
     }
 
     public async deleteFile(id: string): Promise<IMongooseDeleteObject> {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const deleteFile = await this.driveClient.files.delete({
-                    fileId: id
-                });
+                const fileDetails = await this.getFileById(id);
 
-                if (!deleteFile) {
+                const response = await firebaseService.removeFile(fileDetails.filename);
+
+                if (!response) {
                     return reject({ message: "Error Deleting file", code: 400 });
                 }
 
-                const deleteIntentRes = await this.fileSchema.deleteOne({ id });
-
+                const deleteIntentRes = await this.fileSchema.deleteOne({ _id: id });
                 resolve(deleteIntentRes);
 
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
-
-    public async downloadFile(payload: any): Promise<Buffer> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const file = await this.driveClient.files.get(
-                    { fileId: payload.id, alt: "media", },
-                    { responseType: "stream" },
-                    (err, { data }) => {
-                        if (err) {
-                            console.log(err);
-                            return;
-                        }
-                        let buf = [];
-                        data.on("data", (e) => buf.push(e));
-                        data.on("end", () => {
-                            const buffer = Buffer.concat(buf);
-                            resolve(buffer);
-                        });
-                    }
-                );
             } catch (error) {
                 reject(error);
             }

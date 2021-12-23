@@ -9,8 +9,6 @@ import { BaseController } from 'src/server/common/_base.controller';
 import { FilesService } from './files.service';
 import path = require('path');
 import { v4 as uuidv4 } from 'uuid';
-import { Observable } from 'rxjs';
-
 
 @Controller()
 export class FilesController extends BaseController {
@@ -48,27 +46,8 @@ export class FilesController extends BaseController {
     }))
     async uploadFile(@UploadedFile() file: Express.Multer.File, @Req() req: Request, @Res() res: Response) {
         try {
-            let folder = await this.fileService.searchFolder(process.env.GOOGLE_DRIVE_FOLDER_NAME);
-            if (!folder) {
-                folder = await this.fileService.createFolder(process.env.GOOGLE_DRIVE_FOLDER_NAME);
-            }
-            let response = await this.fileService.uploadFile(file, folder.id);
+            let response = await this.fileService.uploadFile(file);
             super.response(res, response, 200, "Successfully Uploaded File");
-        }
-        catch (error) {
-            logger.error(error);
-            const err = manageError(error);
-            l.error(`Error in login, err code: ${400}`);
-            l.error(err.message);
-            super.response(res, '', err.code, err.message);
-        }
-    }
-
-    @Post('/download')
-    async downloadFile(@Req() req: Request, @Res() res: Response) {
-        try {
-            const response = await this.fileService.downloadFile(req.body);
-            super.response(res, response, 200, "File Downloaded Successfully");
         }
         catch (error) {
             logger.error(error);
