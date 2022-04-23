@@ -1,15 +1,18 @@
 {
+  "compileOnSave": false,
   "compilerOptions": {
+	"emitDecoratorMetadata": true,
+	"experimentalDecorators": true,
+    "target": "es6",
     "module": "commonjs",
-    "declaration": true,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "target": "es2017",
+    "esModuleInterop": true,
     "sourceMap": true,
-    "outDir": "./dist",
-    "baseUrl": "./",
-    "incremental": true,
-  }
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "typeRoots": ["types", "node_modules/@types"],
+    "resolveJsonModule": true,
+    "skipLibCheck": true
+  },
+  "include": ["global.d.ts","typings.d.ts", "server/**/*.ts"],
+  "exclude": ["node_modules"]
 }
