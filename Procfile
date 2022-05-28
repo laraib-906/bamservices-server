@@ -1,1 +1,1 @@
-web: npm run dev
+web: cross-env NODE_ENV=development node ./server/index.js
